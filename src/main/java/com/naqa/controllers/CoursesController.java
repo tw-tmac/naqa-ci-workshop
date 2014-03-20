@@ -24,4 +24,12 @@ public class CoursesController {
 
         return modelAndView;
     }
+
+    @RequestMapping(value="/registered-courses")
+    public ModelAndView processPerson(@ModelAttribute("selectedCourse") Course selectedCourse) {
+        ModelAndView modelAndView = new ModelAndView("registered-courses");
+        modelAndView.addObject("course", selectedCourse);
+
+        return modelAndView;
+    }
 }

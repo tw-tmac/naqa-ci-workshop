@@ -1,7 +1,7 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <html>
     <h1>Courses</h1>
-    <form:form method="POST" modelAttribute="course" action="selection-result.html">
+    <form:form method="POST" modelAttribute="course" action="registered-courses.html">
         <table>
             <tbody>
                 <tr>
