@@ -1,0 +1,17 @@
+<h2>Welcome Cadets to Starfleet. Register for your classes. Live long and prosper</h2>
+
+<%= form_for :classes do |f| %>
+  <p>
+<%= radio_button_tag(:class1, "warp") %>
+<%= label_tag(:class1_warp, "warp") %>
+  </p>
+  
+<p>
+<%= radio_button_tag(:class2, "combat") %>
+<%= label_tag(:class2_combat, "combat") %>
+  </p>
+ 
+  <p>
+    <%= f.submit %>
+  </p>
+<% end %>
