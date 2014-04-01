@@ -3,3 +3,5 @@ build
 *.ipr
 *.iws
 .gradle
+.DS_Store
+.vagrant
