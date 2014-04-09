@@ -1,0 +1,82 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1265\cocoasubrtf190
+{\fonttbl\f0\fswiss\fcharset0 ArialMT;}
+{\colortbl;\red255\green255\blue255;\red26\green26\blue26;}
+\margl1440\margr1440\vieww28600\viewh16520\viewkind0
+\deftab720
+\pard\pardeftab720\sl340
+
+\f0\b\fs30 \cf2 Setup the environment\
+
+\b0 1) Install Vagrant 1.4.3\
+2) Install VirtualBox 4.3.8\
+2) Download the following Vagrant file into a new folder that represents your workspace\
+	https://raw.githubusercontent.com/tw-tmac/naqa-ci-workshop/master/Vagrantfile\
+3\'92) vagrant up\'92 to get the VM you will be working on up and running.\
+\
+
+\b Background story\
+
+\b0 Michael is a software developer and he is beginning to develop a website for students to enroll in classes.\
+Michael wants a build pipeline that is triggered off new checkins to promote working versions of the website.\
+\
+
+\b How Michael goes about his day
+\b0 \
+
+\b 	Logging on
+\b0 \
+	Michael logs onto his machine which you can do in a terminal \'93ssh michael@10.10.10.5\'94. His password is th0ughtw0rks.\
+\
+
+\b 	Development
+\b0 \
+	Develops code that can be found in his root directory under the folder naqa-ci-workshop\
+\
+
+\b 	Building
+\b0 \
+	His project uses gradle, you can build the war file by using the \'93build\'94 gradle task.\
+	The war file can then be found at naqa-ci-workshop/build/libs/naqa-ci-workshop.war\
+\
+
+\b 	Deploying
+\b0 \
+	Michael deploys his application by copying the war file into the webapps folder of tomcat (/usr/share/tomcat/webapps/) and restarting tomcat\
+\
+
+\b Objectives\
+
+\b0 * Install Jenkins on the VM\
+	we can install jenkins by \
+		copying the latest version of the war file(http://mirrors.jenkins-ci.org/war/latest/jenkins.war) \
+		to the tomcat web apps (/usr/share/tomcat/webapps/) directory \
+		and restarting tomcat (/usr/share/tomcat/shutdown.sh) (/usr/share/tomcat/startup.sh)\
+* Create a Jenkins job that builds the code and creates a war\
+* Create a Jenkins job that deploys the compiled war to Tomcat and is triggered by the successful completion of the build that generates a war\
+* Setup the job so that it is triggered after checkins to the git repository (can be found in michael\'92s home directory)\
+* Create a Jenkins job that accepts a specific build that has completed successfully and deploys it to a qa environment.\
+\
+
+\b Bonus\
+
+\b0 * Create a version.html file that is exposed by the application and displays the version of the deployed code and the environment\
+\
+
+\b Objectives(Not Ready):\
+
+\b0 * have the pipeline depend on a build that runs the unit tests\
+	Not ready because we need to add unit tests\
+* After the deployment, run the functional tests\
+	Not ready because we need to add a functional test\
+* Create a configuration file for the Dev environment and for the QA environment\
+	Need to figure a scenario where this is required\
+\
+
+\b To Do
+\b0 \
+Give Michael sudo access\
+Install wget\
+/usr/bin/java\
+set app to run on port 8090\
+put git repo on Vagrantbox\
+install gradle?}
