@@ -1,7 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'idea'
-
+apply plugin: 'ssh'
 apply plugin: 'tomcat'
+apply plugin : 'war'
 
 buildscript {
     repositories {
@@ -13,7 +14,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.gradle.api.plugins:gradle-tomcat-plugin:0.9.8'
+       classpath 'org.hidetake:gradle-ssh-plugin:0.3.3'
+       classpath 'org.gradle.api.plugins:gradle-tomcat-plugin:0.9.8'
     }
 }
 
@@ -40,6 +42,32 @@ dependencies {
 
     compile 'org.slf4j:slf4j-api:1.7.5'
     runtime 'org.slf4j:slf4j-log4j12:1.7.5'
+}
+
+remotes {
+    web01 {
+        host = '10.10.10.50'
+        user = 'michael'
+         password = 'th0ughtw0rks'
+        //identity = file('ident.pem')
+    }
+}
+
+///usr/share/tomcat/webapps
+
+task deployWar(type: SshTask, dependsOn: 'war') {
+    def tomcatHome = '/usr/share/tomcat/webapps'
+    def warName = "naqa-ci-workshop"
+    session(remotes.web01) {
+        println "Uploading new war"
+        put(war.archivePath.absolutePath,"${tomcatHome}/${warName}.war.new")
+
+        println "removing old war"
+        execute("rm ${tomcatHome}/${warName}.war")
+
+        println "activating new war"
+        execute("mv ${tomcatHome}/${warName}.war{.new,}")
+    }
 }
 
 task wrapper(type: Wrapper) {
