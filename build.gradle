@@ -72,15 +72,12 @@ task wrapper(type: Wrapper) {
     gradleVersion = '1.8'
 }
 
-task sampleTest(type: Test, dependsOn: testClasses) {
-    include '**/*Sample*'
-}
-
-test {
+task runUnitTests(type: Test, dependsOn: testClasses) {
+    include '**/CoursesController*'
     testLogging {
-        // Show that tests are run in the command-line output
-        events 'started', 'passed'
-    }
+            // Show that tests are run in the command-line output
+            events 'failed', 'passed'
+        }
 }
 
 tomcatRunWar.contextPath = ''
