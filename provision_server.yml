@@ -5,17 +5,23 @@
     app_jar: dropwizard-helloworld-0.0.1-SNAPSHOT.jar
     app_config_filepath: /apps/dropwizard-helloworld.yml
     app_log_path: /tmp/app.log
+  
   tasks:
-    - name: Create main user
-      sudo: yes
-      user: name=wcrusher password=$1$SomeSalt$Gh.B2VVJrrMgpzwcW36XY0 state=present shell=/bin/bash
-    - name: create user for deployment
-      sudo: yes
-      user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash
-    - name: install java
+    - name: install java 1.6 (errol is to blame again)
       sudo: yes
       #update_cache=yes -> will trigger a sudo apt-get update
-      apt: name=openjdk-7-jre update_cache=yes
+      apt: name=openjdk-6-jre update_cache=yes
+    
     - name: install tomcat6 (yes 6.. i blame errol)
       sudo: yes
       apt: name=tomcat6
+    
+    - name: Create main user
+      sudo: yes
+      user: name=wcrusher password=$1$SomeSalt$Gh.B2VVJrrMgpzwcW36XY0 state=present shell=/bin/bash
+
+    - name: create user for deployment
+      sudo: yes
+      user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6
+   
+     

@@ -47,15 +47,15 @@ dependencies {
 remotes {
     web01 {
         host = '10.10.10.50'
-        user = 'michael'
-         password = 'th0ughtw0rks'
+        user = 'cibuild'
+         password = 'cibuild'
     }
 }
 
 task deployWarTo(type: SshTask, dependsOn: 'war') {
 
-    def tomcatHome = '/usr/share/tomcat/webapps'
-    def warName = "naqa-ci-workshop"
+    def tomcatHome = '/var/lib/tomcat6/webapps/'
+    def warName = "starfleet-registration"
 
     session(remotes.web01) {
         println "Uploading new war to $environment"
