@@ -12,16 +12,23 @@
       #update_cache=yes -> will trigger a sudo apt-get update
       apt: name=openjdk-6-jre update_cache=yes
     
-    - name: install tomcat6 (yes 6.. i blame errol)
+    - name: install tomcat6 (yes 6.. i blame errol) and curl
       sudo: yes
-      apt: name=tomcat6
-    
+      apt: name={{item}}
+      with_items:
+        - tomcat6
+        - curl
+   
+     # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
     - name: Create main user
       sudo: yes
-      user: name=wcrusher password=$1$SomeSalt$Gh.B2VVJrrMgpzwcW36XY0 state=present shell=/bin/bash
+      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash
 
     - name: create user for deployment
       sudo: yes
       user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6
-   
-     
+ 
+    - name: Install RVM
+      remote_user: wcrusher 
+      shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
+ 
