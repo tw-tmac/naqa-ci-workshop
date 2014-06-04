@@ -1,111 +1,91 @@
-#!/bin/bash
-#
-# svnserve        Startup script for the Subversion svnserve daemon
-#
-# chkconfig: - 85 15
-# description: The svnserve daemon allows access to Subversion repositories \
-#              using the svn network protocol.
-# processname: svnserve
-# config: /etc/sysconfig/svnserve
-# pidfile: /var/run/svnserve.pid
-#
+#! /bin/sh
 ### BEGIN INIT INFO
-# Provides: svnserve
-# Required-Start: $local_fs $remote_fs $network
-# Required-Stop: $local_fs $remote_fs $network
-# Short-Description: start and stop the svnserve daemon
-# Description: The svnserve daemon allows access to Subversion
-#   repositories using the svn network protocol.
+# Provides:          svnserve
+# Required-Start:    $local_fs $syslog $remote_fs
+# Required-Stop:     $local_fs $syslog $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start svnserve
 ### END INIT INFO
 
-# Source function library.
-. /etc/rc.d/init.d/functions
+# Author: Michal Wojciechowski <odyniec@odyniec.net>
 
-if [ -f /etc/sysconfig/svnserve ]; then
-        . /etc/sysconfig/svnserve
-fi
-SVN_REPO_PATH=/opt/svn/starfleet_repo
-exec=/usr/bin/svnserve
-prog=svnserve
-pidfile=${PIDFILE-/var/run/svnserve.pid}
-lockfile=${LOCKFILE-/var/lock/subsys/svnserve}
-args="--daemon --pid-file=${pidfile} $OPTIONS"
-[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="svnserve"
+NAME=svnserve
+DAEMON=/usr/bin/$NAME
+DAEMON_ARGS="-d -r /opt/svn/repos/starfleet_command/"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
 
-lockfile=/var/lock/subsys/$prog
+[ -x "$DAEMON" ] || exit 0
 
-start() {
-    [ -x $exec ] || exit 5
-    [ -f $config ] || exit 6
-    echo -n $"Starting $prog: "
-    daemon --pidfile=${pidfile} $exec $args --root $SVN_REPO_PATH
-    retval=$?
-    echo
-    if [ $retval -eq 0 ]; then
-        touch $lockfile || retval=4
-    fi
-    return $retval
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+. /lib/init/vars.sh
+
+. /lib/lsb/init-functions
+
+do_start()
+{
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
+		|| return 1
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
+		$DAEMON_ARGS \
+		|| return 2
 }
 
-stop() {
-    echo -n $"Stopping $prog: "
-    killproc -p ${pidfile} $prog
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && rm -f $lockfile
-    return $retval
-}
-
-restart() {
-    stop
-    start
-}
-
-reload() {
-    restart
-}
-
-force_reload() {
-    restart
-}
-
-rh_status() {
-    # run checks to determine if the service is running or use generic status
-    status -p ${pidfile} $prog
-}
-
-rh_status_q() {
-    rh_status >/dev/null 2>&1
+do_stop()
+{
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+	[ "$?" = 2 ] && return 2
+	rm -f $PIDFILE
+	return "$RETVAL"
 }
 
 case "$1" in
-    start)
-        rh_status_q && exit 0
-        $1
-        ;;
-    stop)
-        rh_status_q || exit 0
-        $1
-        ;;
-    restart)
-        $1
-        ;;
-    reload)
-        rh_status_q || exit 7
-        $1
-        ;;
-    force-reload)
-        force_reload
-        ;;
-    status)
-        rh_status
-        ;;
-    condrestart|try-restart)
-        rh_status_q || exit 0
-        restart
-        ;;
-    *)
-        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
-        exit 2
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  restart|force-reload)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
 esac
-exit $?
+
+exit 0
+

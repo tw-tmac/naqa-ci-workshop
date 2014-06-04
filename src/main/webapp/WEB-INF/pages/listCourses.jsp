@@ -6,7 +6,7 @@
     </style>
 </head>
 <h1>Courses</h1>
-<img src="../../img/Starfleet_command_emblem.png" height="25%" length="25%"/>
+<img src="../img/Starfleet_command_emblem.png" height="25%" length="25%"/>
     <form:form method="POST" modelAttribute="course" action="registered-courses.html">
         <table>
             <tbody>

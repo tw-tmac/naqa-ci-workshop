@@ -18,17 +18,54 @@
       with_items:
         - tomcat6
         - curl
+        - subversion
+        - git
+        - vim
    
-     # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+    - name: Create group for SVN users
+      sudo: yes
+      group: name=svn state=present
+    
+    # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
     - name: Create main user
       sudo: yes
-      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash
+      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash groups=svn
 
     - name: create user for deployment
       sudo: yes
-      user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6
+      user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6,svn
  
-    - name: Install RVM
-      remote_user: wcrusher 
-      shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
- 
+    #- name: Install RVM
+    #  remote_user: wcrusher 
+    #  shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
+
+    - name: create SVN repo folder
+      sudo: yes
+      file: path=/opt/svn/repos state=directory group=svn mode=2775
+
+    - name: create SVN repo
+      sudo: yes
+      shell: svnadmin create /opt/svn/repos/starfleet_command
+
+    - name: set up SVN protocol
+      sudo: yes
+      copy: src=server_files/svn_conf/ dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
+    
+    - name: import the project into the SVN repo
+      shell: >
+        git clone https://github.com/tw-tmac/naqa-ci-workshop starfleet_registration;
+        rm -rf starfleet_registration/.git;
+        sudo svn import -m "initial import" starfleet_registration file:///opt/svn/repos/starfleet_command/registration
+
+    - name: create subversion service
+      sudo: yes
+      copy: src=server_files/svnserve dest=/etc/init.d/svnserve owner=root group=root mode=0755
+
+    - name: start subversion service
+      sudo: yes
+      shell: /etc/init.d/svnserve start
+
+
+    # - name: checkout code for wcrusher
+    #  remote_user: wcrusher
+    #  shell: svn co svn://10.10.10.50/starfleet_command/ . --username wcrusher --password th0ughtw0rks

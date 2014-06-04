@@ -2,12 +2,11 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.box = "StarfleetCommandServer"
-    #config.vm.box_url = "https://dl.dropboxusercontent.com/u/32433098/MichaelsDesktop.box"
-    config.vm.box_url = "/Users/thoughtworker/Documents/dev/naqa-ci-workshop/package.box"
+    config.vm.box_url = "precise64.box"
 
     config.vm.host_name = "localhost"
     config.vm.provider "virtualbox" do |v|
-        v.customize ["modifyvm", :id, "--memory", "2048", "--cpus", "1", "--name", "MichaelsDesktop"]
+        v.customize ["modifyvm", :id, "--memory", "2048", "--cpus", "1", "--name", "StarfleetCommandServer"]
     end
 
     config.vm.network :private_network, ip: "10.10.10.50"
