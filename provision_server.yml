@@ -29,7 +29,7 @@
     # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
     - name: Create main user
       sudo: yes
-      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash groups=svn
+      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash groups=svn,admin
 
     - name: create user for deployment
       sudo: yes
@@ -39,32 +39,41 @@
     #  remote_user: wcrusher 
     #  shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
 
+    - name: check if SVN has been created
+      shell: "[ -d /opt/svn/repos ] && echo 'Found' || echo ''"
+      register: svn_installed
+
     - name: create SVN repo folder
       sudo: yes
       file: path=/opt/svn/repos state=directory group=svn mode=2775
+      when: (not svn_installed.stdout)
 
     - name: create SVN repo
       sudo: yes
       shell: svnadmin create /opt/svn/repos/starfleet_command
+      when: (not svn_installed.stdout)
 
     - name: set up SVN protocol
       sudo: yes
-      copy: src=server_files/svn_conf/ dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
-    
+      copy: src=server_files/svn_conf/dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
+      when: (not svn_installed.stdout)
+
     - name: import the project into the SVN repo
       shell: >
         git clone https://github.com/tw-tmac/naqa-ci-workshop starfleet_registration;
         rm -rf starfleet_registration/.git;
         sudo svn import -m "initial import" starfleet_registration file:///opt/svn/repos/starfleet_command/registration
+      when: (not svn_installed.stdout)
 
     - name: create subversion service
       sudo: yes
       copy: src=server_files/svnserve dest=/etc/init.d/svnserve owner=root group=root mode=0755
+      when: (not svn_installed.stdout)
 
     - name: start subversion service
       sudo: yes
       shell: /etc/init.d/svnserve start
-
+      when: (not svn_installed.stdout)
 
     # - name: checkout code for wcrusher
     #  remote_user: wcrusher
