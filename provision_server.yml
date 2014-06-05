@@ -21,6 +21,7 @@
         - subversion
         - git
         - vim
+        - openjdk-6-jdk
    
     - name: Create group for SVN users
       sudo: yes
@@ -34,7 +35,12 @@
     - name: create user for deployment
       sudo: yes
       user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6,svn
- 
+
+    - name: set up JAVA_HOME for all users
+      sudo: yes
+    # path is: /usr/lib/jvm/java-1.6.0-openjdk-amd64
+      lineinfile: dest=/etc/profile state=present insertafter=EOF line="export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64/jre;export PATH=$PATH:$JAVA_HOME/bin"
+
     #- name: Install RVM
     #  remote_user: wcrusher 
     #  shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
