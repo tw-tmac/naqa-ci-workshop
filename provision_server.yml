@@ -22,6 +22,7 @@
         - git
         - vim
         - openjdk-6-jdk
+        - libicu48
    
     - name: Create group for SVN users
       sudo: yes
@@ -48,6 +49,10 @@
     - name: check if SVN has been created
       shell: "[ -d /opt/svn/repos ] && echo 'Found' || echo ''"
       register: svn_installed
+    
+    - name: check if phantomJS is installed
+      shell: "[ -a /usr/bin/phantomjs ] && echo 'Found' || echo ''"
+      register: phantomjs_installed
 
     - name: create SVN repo folder
       sudo: yes
@@ -80,6 +85,16 @@
       sudo: yes
       shell: /etc/init.d/svnserve start
       when: (not svn_installed.stdout)
+    
+    - name: install latest version of phantomjs
+      sudo: yes
+      shell: >
+        wget https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2;
+        tar xjf phantomjs-1.9.0-linux-x86_64.tar.bz2;
+        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/share/phantomjs;
+        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs;
+        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/bin/phantomjs;
+      when: (not phantomjs_installed.stdout)
 
     # - name: checkout code for wcrusher
     #  remote_user: wcrusher
