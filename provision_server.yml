@@ -7,12 +7,24 @@
     app_log_path: /tmp/app.log
   
   tasks:
+    - name: check if SVN has been created
+      shell: "[ -d /opt/svn/repos ] && echo 'Found' || echo ''"
+      register: svn_installed
+    
+    - name: check if phantomJS is installed
+      shell: "[ -a /usr/bin/phantomjs ] && echo 'Found' || echo ''"
+      register: phantomjs_installed
+
+    - name: check if ruby is installed
+      shell: "[ -a /usr/local/bin/ruby ] && echo 'Found' || echo ''"
+      register: ruby_installed
+
     - name: install java 1.6 (errol is to blame again)
       sudo: yes
       #update_cache=yes -> will trigger a sudo apt-get update
       apt: name=openjdk-6-jre update_cache=yes
     
-    - name: install tomcat6 (yes 6.. i blame errol) and curl
+    - name: install all the required packages
       sudo: yes
       apt: name={{item}}
       with_items:
@@ -23,6 +35,11 @@
         - vim
         - openjdk-6-jdk
         - libicu48
+        - build-essential 
+        - zlib1g-dev 
+        - libssl-dev 
+        - libreadline6-dev 
+        - libyaml-dev
    
     - name: Create group for SVN users
       sudo: yes
@@ -42,17 +59,26 @@
     # path is: /usr/lib/jvm/java-1.6.0-openjdk-amd64
       lineinfile: dest=/etc/profile state=present insertafter=EOF line="export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64/jre;export PATH=$PATH:$JAVA_HOME/bin"
 
-    #- name: Install RVM
-    #  remote_user: wcrusher 
-    #  shell: curl -L get.rvm.io | bash -s stable --ruby=2.1
+    - name: Build ruby 2.1.2 from source
+      shell: >
+        wget http://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.2.tar.gz;
+        tar -xzvf ruby-2.1.2.tar.gz;
+        cd ruby-2.1.2;
+        ./configure;
+        make
+      when: (not ruby_installed.stdout)
 
-    - name: check if SVN has been created
-      shell: "[ -d /opt/svn/repos ] && echo 'Found' || echo ''"
-      register: svn_installed
+    - name: Install ruby 2.1.2 for all users
+      sudo: yes
+      shell: >
+        cd ruby-2.1.2;
+        make install;
+      when: (not ruby_installed.stdout)
     
-    - name: check if phantomJS is installed
-      shell: "[ -a /usr/bin/phantomjs ] && echo 'Found' || echo ''"
-      register: phantomjs_installed
+    - name: create subversion service
+      sudo: yes
+      copy: src=server_files/svnserve dest=/etc/init.d/svnserve owner=root group=root mode=0755
+      when: (not svn_installed.stdout)
 
     - name: create SVN repo folder
       sudo: yes
@@ -66,7 +92,7 @@
 
     - name: set up SVN protocol
       sudo: yes
-      copy: src=server_files/svn_conf/dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
+      copy: src=server_files/svn_conf/ dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
       when: (not svn_installed.stdout)
 
     - name: import the project into the SVN repo
@@ -74,11 +100,6 @@
         git clone https://github.com/tw-tmac/naqa-ci-workshop starfleet_registration;
         rm -rf starfleet_registration/.git;
         sudo svn import -m "initial import" starfleet_registration file:///opt/svn/repos/starfleet_command/registration
-      when: (not svn_installed.stdout)
-
-    - name: create subversion service
-      sudo: yes
-      copy: src=server_files/svnserve dest=/etc/init.d/svnserve owner=root group=root mode=0755
       when: (not svn_installed.stdout)
 
     - name: start subversion service
@@ -96,6 +117,3 @@
         cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/bin/phantomjs;
       when: (not phantomjs_installed.stdout)
 
-    # - name: checkout code for wcrusher
-    #  remote_user: wcrusher
-    #  shell: svn co svn://10.10.10.50/starfleet_command/ . --username wcrusher --password th0ughtw0rks
