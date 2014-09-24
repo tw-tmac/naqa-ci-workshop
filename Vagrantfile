@@ -2,7 +2,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.box = "StarfleetCommandServer"
-    config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+    config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
 
     config.vm.host_name = "localhost"
     config.vm.provider "virtualbox" do |v|

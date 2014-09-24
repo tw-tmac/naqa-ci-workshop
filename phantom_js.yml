@@ -1,0 +1,13 @@
+- name: check if phantomJS is installed
+  shell: "[ -a /usr/bin/phantomjs ] && echo 'Found' || echo ''"
+  register: phantomjs_installed
+   
+- name: install latest version of phantomjs
+  sudo: yes
+  shell: >
+    wget https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2;
+    tar xjf phantomjs-1.9.0-linux-x86_64.tar.bz2;
+    cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/share/phantomjs;
+    cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs;
+    cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/bin/phantomjs;
+  when: (not phantomjs_installed.stdout)

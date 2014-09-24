@@ -1,0 +1,9 @@
+- name: install java 1.6 (errol is to blame again)
+  sudo: yes
+  #update_cache=yes -> will trigger a sudo apt-get update
+  apt: name=openjdk-6-jre update_cache=yes
+
+- name: set up JAVA_HOME for all users
+  sudo: yes
+# path is: /usr/lib/jvm/java-1.6.0-openjdk-amd64
+  lineinfile: dest=/etc/profile state=present insertafter=EOF line="export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64/jre;export PATH=$PATH:$JAVA_HOME/bin"

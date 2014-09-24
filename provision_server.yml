@@ -1,29 +1,9 @@
 ---
 - hosts: AppServer
-  vars:
-    app_user_id: vagrant
-    app_jar: dropwizard-helloworld-0.0.1-SNAPSHOT.jar
-    app_config_filepath: /apps/dropwizard-helloworld.yml
-    app_log_path: /tmp/app.log
-  
+  vars_files: 
+    - variables.yml
+ 
   tasks:
-    - name: check if SVN has been created
-      shell: "[ -d /opt/svn/repos ] && echo 'Found' || echo ''"
-      register: svn_installed
-    
-    - name: check if phantomJS is installed
-      shell: "[ -a /usr/bin/phantomjs ] && echo 'Found' || echo ''"
-      register: phantomjs_installed
-
-    - name: check if ruby is installed
-      shell: "[ -a /usr/local/bin/ruby ] && echo 'Found' || echo ''"
-      register: ruby_installed
-
-    - name: install java 1.6 (errol is to blame again)
-      sudo: yes
-      #update_cache=yes -> will trigger a sudo apt-get update
-      apt: name=openjdk-6-jre update_cache=yes
-    
     - name: install all the required packages
       sudo: yes
       apt: name={{item}}
@@ -34,86 +14,13 @@
         - git
         - vim
         - openjdk-6-jdk
-        - libicu48
+        #- libicu48
         - build-essential 
         - zlib1g-dev 
         - libssl-dev 
         - libreadline6-dev 
         - libyaml-dev
-   
-    - name: Create group for SVN users
-      sudo: yes
-      group: name=svn state=present
     
-    # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
-    - name: Create main user
-      sudo: yes
-      user: name=wcrusher password=$1$SomeSalt$tGWo/ciwo3VvamtKkqUbk0 state=present shell=/bin/bash groups=svn,admin
-
-    - name: create user for deployment
-      sudo: yes
-      user: name=cibuild password=$1$SomeSalt$pl1JEi5xFCgFIGYe8uGbb1 state=present shell=/bin/bash groups=tomcat6,svn
-
-    - name: set up JAVA_HOME for all users
-      sudo: yes
-    # path is: /usr/lib/jvm/java-1.6.0-openjdk-amd64
-      lineinfile: dest=/etc/profile state=present insertafter=EOF line="export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64/jre;export PATH=$PATH:$JAVA_HOME/bin"
-
-    - name: Build ruby 2.1.2 from source
-      shell: >
-        wget http://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.2.tar.gz;
-        tar -xzvf ruby-2.1.2.tar.gz;
-        cd ruby-2.1.2;
-        ./configure;
-        make
-      when: (not ruby_installed.stdout)
-
-    - name: Install ruby 2.1.2 for all users
-      sudo: yes
-      shell: >
-        cd ruby-2.1.2;
-        make install;
-      when: (not ruby_installed.stdout)
-    
-    - name: create subversion service
-      sudo: yes
-      copy: src=server_files/svnserve dest=/etc/init.d/svnserve owner=root group=root mode=0755
-      when: (not svn_installed.stdout)
-
-    - name: create SVN repo folder
-      sudo: yes
-      file: path=/opt/svn/repos state=directory group=svn mode=2775
-      when: (not svn_installed.stdout)
-
-    - name: create SVN repo
-      sudo: yes
-      shell: svnadmin create /opt/svn/repos/starfleet_command
-      when: (not svn_installed.stdout)
-
-    - name: set up SVN protocol
-      sudo: yes
-      copy: src=server_files/svn_conf/ dest=/opt/svn/repos/starfleet_command/conf mode=600 owner=root group=svn
-      when: (not svn_installed.stdout)
-
-    - name: import the project into the SVN repo
-      shell: >
-        git clone https://github.com/tw-tmac/naqa-ci-workshop starfleet_registration;
-        rm -rf starfleet_registration/.git;
-        sudo svn import -m "initial import" starfleet_registration file:///opt/svn/repos/starfleet_command/registration
-      when: (not svn_installed.stdout)
-
-    - name: start subversion service
-      sudo: yes
-      shell: /etc/init.d/svnserve start
-      when: (not svn_installed.stdout)
-    
-    - name: install latest version of phantomjs
-      sudo: yes
-      shell: >
-        wget https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2;
-        tar xjf phantomjs-1.9.0-linux-x86_64.tar.bz2;
-        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/share/phantomjs;
-        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs;
-        cp phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/bin/phantomjs;
-      when: (not phantomjs_installed.stdout)
-
+    - include: svn.yml
+    - include: phantom_js.yml
+    - include: java.yml
